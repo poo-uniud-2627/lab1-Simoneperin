@@ -36,8 +36,12 @@ public class Punteggio {
      * Pretende: puntiPerVincere è almeno 1; scartoMinimo è almeno 1.
      * Promette: una partita 0 a 0, non finita, senza vincitore e con la storia
      * vuota.
+     * Lancia IllegalArgumentException se puntiPerVincere è minore di 1 o scartoMinimo è minore di 1.
      */
     public Punteggio(int puntiPerVincere, int scartoMinimo) {
+        if(puntiPerVincere < 1 || scartoMinimo < 1){
+            throw new IllegalArgumentException("Punti per vincere e scarto minimo non possono essere minori di 1 ");
+        }
         this.puntiPerVincere = puntiPerVincere;
         this.scartoMinimo = scartoMinimo;
         this.punteggioSinistra = 0;
@@ -54,10 +58,13 @@ public class Punteggio {
      * lato chi
      * vince (regola in cima alla classe), la partita è finita e il vincitore è chi.
      * Se la partita era già finita, non cambia niente.
+     * Se chi è null lancia IllegalArgumentException, anche a partita finita, e non cambia niente.
      */
     public void segnaPunto(Lato chi) {
-        if (isFinita()) // partita finita
-            return;
+        if(chi == null)
+            throw new IllegalArgumentException("Chi non puo essere null");
+        if (isFinita()) 
+            return; // partita finita 
         if (chi == Lato.SINISTRA)
             punteggioSinistra++;
         else if (chi == Lato.DESTRA)
@@ -68,8 +75,11 @@ public class Punteggio {
     /**
      * Pretende: chi non è null.
      * Promette: i punti del lato chi. Non cambia niente.
+     * Lancia IllegalArgumentException se chi è null.
      */
     public int getPunti(Lato chi) {
+        if(chi == null)
+            throw new IllegalArgumentException("Chi non puo essere null"); 
         if (chi == Lato.SINISTRA)
             return punteggioSinistra;
         return punteggioDestra;
@@ -156,4 +166,32 @@ public class Punteggio {
         storia = new ArrayList<>(); // azzera la storia
     }
 
+
+    /**
+     * Invariante di rappresentazione:
+     * - puntiPerVincere >= 1 e scartoMinimo >= 1;
+     * - storia non è null e non contiene elementi null;
+     * - nella storia non ci sono punti successivi a quello che ha chiuso la partita;
+     * - punteggioSinistra e punteggioDestra corrispondono al numero di punti
+     *   di ciascun lato presenti nella storia.
+     */
+    boolean repOK(){
+        if(puntiPerVincere < 1 || scartoMinimo < 1 || storia == null){
+            return false; 
+        }
+        int sinistra = 0;
+        int destra = 0;
+        for (Lato punto : storia) {
+            if (punto == null)
+                return false;
+            if ((sinistra >= puntiPerVincere || destra >= puntiPerVincere)
+                    && Math.abs(sinistra - destra) >= scartoMinimo)
+                return false;
+            if (punto == Lato.SINISTRA)
+                sinistra++;
+            else
+                destra++;
+        }
+        return punteggioSinistra == sinistra && punteggioDestra == destra;
+    }
 }
